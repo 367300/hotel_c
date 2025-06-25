@@ -11,7 +11,7 @@ public class Program
     {
         var hotel = new Task1.Hotel.Hotel();
         hotel.PrintInfo();
-        hotel.MoveIntoBetterRoom(RoomCategory.Standard, 10000, TimeSpan.FromDays(30));
+        hotel.MoveIntoBetterRoom(RoomCategory.Standard, 10000, TimeSpan.FromDays(23));
     }
 
     private static void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)

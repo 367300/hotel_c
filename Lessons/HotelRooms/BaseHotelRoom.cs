@@ -14,6 +14,7 @@ public abstract class BaseHotelRoom : IHotelRoom
     private int _currentLiveUserId;
     private Timer _liveTimer;
     private Dictionary<int ,BookInfo> _bookInfo = new();
+    private const int MaxLiveDays = 24;
 
     protected BaseHotelRoom(int roomId, long price)
     {
@@ -124,7 +125,7 @@ public abstract class BaseHotelRoom : IHotelRoom
         do
         {
             userId = Random.Shared.Next(50000);
-        } while (!_bookInfo.ContainsKey(userId));
+        } while (_bookInfo.ContainsKey(userId));
 
         return userId;
     }
@@ -156,6 +157,16 @@ public abstract class BaseHotelRoom : IHotelRoom
     /// <returns></returns>
     private bool SettleHotelRoom(TimeSpan liveDuration, int userId)
     {
+        if (liveDuration.TotalDays > MaxLiveDays)
+        {
+            throw new ArgumentException
+            (
+                $"Максимальный срок заселения: {MaxLiveDays}, переданный аргумент: {liveDuration.TotalDays}"
+            );
+            // Конкретно здесь гораздо чище смотрится вывод в консоль
+            // Console.WriteLine($"Мы не можем вас заселить на столь длительный срок, максимальное количество дней {MaxLiveDays}");
+            // return false;
+        }
         _bookInfo.Add(userId, new BookInfo
         {
             LiveStartTime = DateTime.Now,
@@ -163,7 +174,8 @@ public abstract class BaseHotelRoom : IHotelRoom
         });
         _currentLiveUserId = userId;
 
-        _liveTimer = new Timer(liveDuration);
+        // Максимальное время в милисекундах 2 147 483 647 (24.8 дня)
+        _liveTimer = new Timer(liveDuration.TotalMilliseconds);
         _liveTimer.Start();
         _liveTimer.Elapsed += EndLiveTimeToRoom;
         State = HotelRoomState.Busy;
