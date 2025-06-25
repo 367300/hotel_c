@@ -38,10 +38,14 @@ public class Hotel
 
         foreach (var suitableNumber in suitableNumbers)
         {
-            if (suitableNumber.RentHotelRoom(liveDuration))
+            try
             {
+                suitableNumber.RentHotelRoom(liveDuration);
                 isSuccess = true;
                 break;
+            }
+            catch {
+                Console.WriteLine("[Hotel] Не удалось заселиться в комнату");
             }
         }
 
@@ -72,10 +76,16 @@ public class Hotel
 
         foreach (var suitableNumber in suitableNumbers)
         {
-            if (suitableNumber.Book(startLive, endLive))
+            try
             {
+                suitableNumber.Book(startLive, endLive);
                 isSuccess = true;
                 break;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[BaseHotelRoom] Ошибка при бронировании номера: {ex.Message}");
+                throw;
             }
         }
 
@@ -87,7 +97,7 @@ public class Hotel
         }
         else
         {
-            Console.WriteLine("[Hotel] Живу в подвале =(");
+            Console.WriteLine("[Hotel] Не удалось найти комнатушку, живу в подвале =(");
         }
     }
 
