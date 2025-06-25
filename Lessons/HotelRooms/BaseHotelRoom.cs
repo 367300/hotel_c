@@ -23,47 +23,55 @@ public abstract class BaseHotelRoom : IHotelRoom
         State = HotelRoomState.Free;
     }
 
-    public bool Book(DateTime startLive, DateTime endLive)
+    public void Book(DateTime startLive, DateTime endLive)
     {
-
-        if (startLive <= DateTime.Now)
+        try
         {
-            return false;
-        }
-
-        if (endLive <= startLive)
-        {
-            return false;
-        }
-
-        switch (State)
-        {
-            case HotelRoomState.Free:
+            if (startLive <= DateTime.Now)
             {
-                return SetBookRecord(startLive, endLive);
+                throw new ArgumentException("Дата начала проживания должна быть больше текущей даты.");
             }
-            case HotelRoomState.Busy:
-            case HotelRoomState.Booked:
+
+            if (endLive <= startLive)
             {
-                return BookForBookedState(startLive, endLive);
+                throw new ArgumentException("Дата окончания проживания должна быть больше даты начала.");
             }
+
+            switch (State)
+            {
+                case HotelRoomState.Free:
+                {
+                    SetBookRecord(startLive, endLive);
+                    return;
+                }
+                case HotelRoomState.Busy:
+                case HotelRoomState.Booked:
+                {
+                    BookForBookedState(startLive, endLive);
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Некорректное состояние комнаты для бронирования.");
         }
-        return false;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[BaseHotelRoom] Ошибка при бронировании номера: {ex.Message}");
+        }
     }
 
-    private bool BookForBookedState(DateTime startLive, DateTime endLive)
+    private void BookForBookedState(DateTime startLive, DateTime endLive)
     {
         if (CheckResidenceInterval(startLive, endLive))
         {
-            return SetBookRecord(startLive, endLive);
+            SetBookRecord(startLive, endLive);
         }
         else
         {
-            Console.WriteLine($"[BaseHotelRoom] Данное окошко занято! Не удалось заселить забронировать комнату! " +
+            Console.WriteLine($"[BaseHotelRoom] Данное окошко занято! Не удалось забронировать комнату! " +
                               $"RoomId = {RoomId}" +
                               $"Время начала жизни = {startLive}" +
                               $"Время окончания жизни в номере = {endLive}");
-            return false;
+            throw new InvalidOperationException("Данное окошко занято! Не удалось забронировать комнату!");
         }
     }
 
@@ -89,7 +97,7 @@ public abstract class BaseHotelRoom : IHotelRoom
         return true;
     }
 
-    private bool SetBookRecord(DateTime startLive, DateTime endLive)
+    private void SetBookRecord(DateTime startLive, DateTime endLive)
     {
         var toStartTimeDuration = startLive - DateTime.Now;
         State = HotelRoomState.Booked;
@@ -110,7 +118,6 @@ public abstract class BaseHotelRoom : IHotelRoom
                           $"RoomId = {RoomId}" +
                           $"Время начала жизни = {startLive}" +
                           $"Время окончания жизни в номере = {endLive}");
-        return true;
         
         void BookTimerOnElapsed(object? sender, ElapsedEventArgs e)
         {
@@ -130,32 +137,35 @@ public abstract class BaseHotelRoom : IHotelRoom
         return userId;
     }
 
-    public bool RentHotelRoom(TimeSpan liveDuration, int userId = -1)
+    public void RentHotelRoom(TimeSpan liveDuration, int userId = -1)
     {
         if (userId == -1) { userId = GenerateUserId(); }
 
         if (State == HotelRoomState.Free)
         {
-            return SettleHotelRoom(liveDuration, userId);
+            SettleHotelRoom(liveDuration, userId);
+            return;
         }
         else if (State == HotelRoomState.Booked)
         {
             if (CheckResidenceInterval(DateTime.Now, DateTime.Now + liveDuration))
             {
-                return SettleHotelRoom(liveDuration, userId);
+                SettleHotelRoom(liveDuration, userId);
+                return;
             }
             Console.WriteLine($"[BaseHotelRoom] Данное окошко занято! Не удалось заселить в комнату! " +
                               $"RoomId = {RoomId}" +
                               $"Длительность проживания = {liveDuration}");
+            throw new InvalidOperationException("Данное окошко занято! Не удалось заселить в комнату!");
         }
-        return false;
+        throw new InvalidOperationException("Некорректное состояние комнаты для заселения.");
     }
 
     /// <summary>
     /// Произвести заселение людей
     /// </summary>
     /// <returns></returns>
-    private bool SettleHotelRoom(TimeSpan liveDuration, int userId)
+    private void SettleHotelRoom(TimeSpan liveDuration, int userId)
     {
         if (liveDuration.TotalDays > MaxLiveDays)
         {
@@ -181,7 +191,6 @@ public abstract class BaseHotelRoom : IHotelRoom
         State = HotelRoomState.Busy;
         Console.WriteLine($"[BaseHotelRoom] Успешно заселили человека. Его длительность проживания = {liveDuration} " +
                           $"RoomId = {RoomId}");
-        return true;
     }
 
     private void EndLiveTimeToRoom(object? sender, System.Timers.ElapsedEventArgs e)
@@ -190,12 +199,12 @@ public abstract class BaseHotelRoom : IHotelRoom
         UnRentHotelRoom();
     }
 
-    public bool UnRentHotelRoom()
+    public void UnRentHotelRoom()
     {
         if (State == HotelRoomState.Free)
         {
             Console.WriteLine($"[BaseHotelRoom] Пытались выселиться из номера в отеле, но он и так уже пуст! RoomId = {RoomId}");
-            return false;
+            throw new InvalidOperationException("Пытались выселиться из номера в отеле, но он и так уже пуст!");
         }
 
         _liveTimer.Stop();
@@ -207,6 +216,5 @@ public abstract class BaseHotelRoom : IHotelRoom
 
         _currentLiveUserId = -1;
         Console.WriteLine($"[BaseHotelRoom] Успешно выселили человека. RoomId = {RoomId}");
-        return true;
     }
 }

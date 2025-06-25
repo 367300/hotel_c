@@ -10,16 +10,16 @@ public interface IHotelRoom
     /// Забронировать номер
     /// </summary>
     /// <returns></returns>
-    public bool Book(DateTime startLive, DateTime endLive);
+    public void Book(DateTime startLive, DateTime endLive);
     /// <summary>
     /// Заселение в отель
     /// </summary>
     /// <returns></returns>
-    public bool RentHotelRoom(TimeSpan liveDuration, int userId = -1);
+    public void RentHotelRoom(TimeSpan liveDuration, int userId = -1);
     /// <summary>
     /// Выселение из комнаты отеля
     /// </summary>
     /// <returns></returns>
-    public bool UnRentHotelRoom();
+    public void UnRentHotelRoom();
 
 }

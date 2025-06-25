@@ -1,7 +1,7 @@
 ﻿using Task1.HotelRooms;
-using Task1.Simulation;
-using Task1.Hotel;
-using Timer = System.Timers.Timer;
+// using Task1.Simulation;
+// using Task1.Hotel;
+// using Timer = System.Timers.Timer;
 
 namespace Task1;
 
